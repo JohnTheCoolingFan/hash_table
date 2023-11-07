@@ -8,7 +8,7 @@ use crate::{
 
 pub mod iter;
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct HashTable<K, V> {
     pub(crate) indices_table: HashMap<K, usize>,
     pub(crate) values_vector: Vec<V>,
