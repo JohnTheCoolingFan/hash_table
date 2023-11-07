@@ -1,6 +1,9 @@
 use std::{hash::Hash, marker::PhantomData};
 
+use self::directions::*;
 use crate::{column::owned::HashTableColumnOwned, HashMap, HashTable};
+
+pub mod directions;
 
 #[derive(Debug)]
 pub struct TableIterWrapper<K, V, D> {
@@ -125,20 +128,3 @@ where
         TableElementWiseIter { table: self.table }
     }
 }
-
-pub trait IterDirection {}
-
-#[derive(Debug, Clone, Copy)]
-pub struct Column;
-
-impl IterDirection for Column {}
-
-#[derive(Debug, Clone, Copy)]
-pub struct Row;
-
-impl IterDirection for Row {}
-
-#[derive(Debug, Clone, Copy)]
-pub struct ElementsReverse;
-
-impl IterDirection for ElementsReverse {}
