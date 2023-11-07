@@ -21,7 +21,7 @@ where
 }
 
 #[derive(Debug)]
-struct TableRowWiseIter<K, V> {
+pub struct TableRowWiseIter<K, V> {
     table: HashTable<K, V>,
 }
 
@@ -37,7 +37,7 @@ where
 }
 
 #[derive(Debug)]
-struct TableColumnWiseIter<K, V> {
+pub struct TableColumnWiseIter<K, V> {
     table: HashTable<K, V>,
 }
 
@@ -55,7 +55,7 @@ where
 }
 
 #[derive(Debug)]
-struct TableElementWiseIter<K, V> {
+pub struct TableElementWiseIter<K, V> {
     table: HashTable<K, V>,
 }
 
@@ -129,16 +129,16 @@ where
 pub trait IterDirection {}
 
 #[derive(Debug, Clone, Copy)]
-struct Column;
+pub struct Column;
 
 impl IterDirection for Column {}
 
 #[derive(Debug, Clone, Copy)]
-struct Row;
+pub struct Row;
 
 impl IterDirection for Row {}
 
 #[derive(Debug, Clone, Copy)]
-struct ElementsReverse;
+pub struct ElementsReverse;
 
 impl IterDirection for ElementsReverse {}
