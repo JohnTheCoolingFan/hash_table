@@ -6,12 +6,12 @@ use crate::{column::owned::HashTableColumnOwned, HashMap, HashTable};
 pub mod directions;
 
 #[derive(Debug)]
-pub struct TableIterWrapper<K, V, D> {
+pub struct TableOwnedIterWrapper<K, V, D> {
     pub table: HashTable<K, V>,
     dir_phantom: PhantomData<D>,
 }
 
-impl<K, V, D> TableIterWrapper<K, V, D>
+impl<K, V, D> TableOwnedIterWrapper<K, V, D>
 where
     D: IterDirection,
 {
@@ -24,11 +24,11 @@ where
 }
 
 #[derive(Debug)]
-pub struct TableRowWiseIter<K, V> {
+pub struct TableRowWiseOwnedIter<K, V> {
     table: HashTable<K, V>,
 }
 
-impl<K, V> Iterator for TableRowWiseIter<K, V>
+impl<K, V> Iterator for TableRowWiseOwnedIter<K, V>
 where
     K: Clone + Hash + Eq,
 {
@@ -40,11 +40,11 @@ where
 }
 
 #[derive(Debug)]
-pub struct TableColumnWiseIter<K, V> {
+pub struct TableColumnWiseOwnedIter<K, V> {
     table: HashTable<K, V>,
 }
 
-impl<K, V> Iterator for TableColumnWiseIter<K, V>
+impl<K, V> Iterator for TableColumnWiseOwnedIter<K, V>
 where
     K: Hash + Eq + Clone,
 {
@@ -58,11 +58,11 @@ where
 }
 
 #[derive(Debug)]
-pub struct TableElementWiseIter<K, V> {
+pub struct TableElementWiseReverseOwnedIter<K, V> {
     table: HashTable<K, V>,
 }
 
-impl<K, V> Iterator for TableElementWiseIter<K, V>
+impl<K, V> Iterator for TableElementWiseReverseOwnedIter<K, V>
 where
     K: Hash + Eq + Clone,
 {
@@ -91,40 +91,40 @@ where
     }
 }
 
-impl<K, V> IntoIterator for TableIterWrapper<K, V, Row>
+impl<K, V> IntoIterator for TableOwnedIterWrapper<K, V, Row>
 where
     K: Clone + Hash + Eq,
 {
     type Item = HashMap<K, V>;
-    type IntoIter = TableRowWiseIter<K, V>;
+    type IntoIter = TableRowWiseOwnedIter<K, V>;
 
     fn into_iter(self) -> Self::IntoIter {
-        TableRowWiseIter { table: self.table }
+        TableRowWiseOwnedIter { table: self.table }
     }
 }
 
-impl<K, V> IntoIterator for TableIterWrapper<K, V, Column>
+impl<K, V> IntoIterator for TableOwnedIterWrapper<K, V, Column>
 where
     K: Hash + Eq + Clone,
 {
     type Item = HashTableColumnOwned<K, V>;
-    type IntoIter = TableColumnWiseIter<K, V>;
+    type IntoIter = TableColumnWiseOwnedIter<K, V>;
 
     /// Iteration order depends on what column key will be returned first by the underlying hashmap
     fn into_iter(self) -> Self::IntoIter {
-        TableColumnWiseIter { table: self.table }
+        TableColumnWiseOwnedIter { table: self.table }
     }
 }
 
-impl<K, V> IntoIterator for TableIterWrapper<K, V, ElementsReverse>
+impl<K, V> IntoIterator for TableOwnedIterWrapper<K, V, ElementsReverse>
 where
     K: Clone + Hash + Eq,
 {
     type Item = ((K, usize), V);
-    type IntoIter = TableElementWiseIter<K, V>;
+    type IntoIter = TableElementWiseReverseOwnedIter<K, V>;
 
     /// This implementation goes in reverse order. Last row to first, last key to first.
     fn into_iter(self) -> Self::IntoIter {
-        TableElementWiseIter { table: self.table }
+        TableElementWiseReverseOwnedIter { table: self.table }
     }
 }
