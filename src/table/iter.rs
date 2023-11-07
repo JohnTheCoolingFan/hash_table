@@ -1,6 +1,6 @@
 use std::{hash::Hash, marker::PhantomData};
 
-use crate::{HashMap, HashTable};
+use crate::{column::owned::HashTableColumnOwned, HashMap, HashTable};
 
 #[derive(Debug)]
 pub struct TableIterWrapper<K, V, D> {
@@ -45,7 +45,7 @@ impl<K, V> Iterator for TableColumnWiseIter<K, V>
 where
     K: Hash + Eq + Clone,
 {
-    type Item = (K, Vec<V>);
+    type Item = HashTableColumnOwned<K, V>;
 
     /// Iteration order depends on what column key will be returned first by the underlying hashmap
     fn next(&mut self) -> Option<Self::Item> {
@@ -104,7 +104,7 @@ impl<K, V> IntoIterator for TableIterWrapper<K, V, Column>
 where
     K: Hash + Eq + Clone,
 {
-    type Item = (K, Vec<V>);
+    type Item = HashTableColumnOwned<K, V>;
     type IntoIter = TableColumnWiseIter<K, V>;
 
     /// Iteration order depends on what column key will be returned first by the underlying hashmap

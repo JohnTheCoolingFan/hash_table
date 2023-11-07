@@ -1,7 +1,7 @@
 use std::{borrow::Borrow, collections::VecDeque, hash::Hash};
 
 use crate::{
-    column::HashTableColumn,
+    column::{borrowed::HashTableColumnBorrowed, owned::HashTableColumnOwned},
     row::{borrowed::HashTableRowBorrowed, owned::HashTableRowOwned},
     HashMap,
 };
@@ -81,13 +81,13 @@ where
     pub fn get_column<'t, 'k, Q>(
         &'t self,
         column: &'k Q,
-    ) -> Option<HashTableColumn<'t, 'k, K, Q, V>>
+    ) -> Option<HashTableColumnBorrowed<'t, 'k, K, Q, V>>
     where
         K: Borrow<Q>,
         Q: Hash + Eq,
     {
         if self.indices_table.contains_key(column) {
-            Some(HashTableColumn {
+            Some(HashTableColumnBorrowed {
                 parent_table: self,
                 column,
             })
@@ -141,7 +141,7 @@ where
         }
     }
 
-    pub fn remove_column<Q>(&mut self, column: &Q) -> Option<(K, Vec<V>)>
+    pub fn remove_column<Q>(&mut self, column: &Q) -> Option<HashTableColumnOwned<K, V>>
     where
         K: Borrow<Q>,
         Q: Hash + Eq + ?Sized,
@@ -159,7 +159,7 @@ where
                 let index = i * self.columns_len() + column_index;
                 buf.push(self.values_vector.remove(index));
             }
-            Some((key, buf))
+            Some(HashTableColumnOwned { key, values: buf })
         } else {
             None
         }
