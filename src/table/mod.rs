@@ -96,10 +96,23 @@ where
         }
     }
 
-    pub fn add_row(&mut self, row: impl IntoIterator<Item = (K, V)>) {
+    pub fn add_row<I>(&mut self, row: I)
+    where
+        I: IntoIterator<Item = (K, V)>,
+    {
         let mut pairs: Vec<(K, V)> = row.into_iter().collect();
         pairs.sort_by_key(|(k, _)| self.indices_table.get(k));
         self.values_vector.extend(pairs.into_iter().map(|(_, v)| v));
+    }
+
+    pub fn add_row_with<F>(&mut self, mut row_generator: F)
+    where
+        F: FnMut(&K) -> V,
+    {
+        let mut keys = self.indices_table.iter().collect::<Vec<_>>();
+        keys.sort_by_key(|(_, i)| *i);
+        self.values_vector
+            .extend(keys.into_iter().map(|(k, _)| row_generator(k)))
     }
 
     pub fn remove_row(&mut self, row: usize) -> Option<HashTableRowOwned<'_, K, V>> {
@@ -120,25 +133,36 @@ where
         })
     }
 
-    pub fn add_column(
-        &mut self,
-        column: K,
-        mut values: impl FnMut(HashTableRowBorrowed<'_, K, V>) -> V,
-    ) {
+    pub fn add_column<I>(&mut self, column: K, values: I)
+    where
+        I: IntoIterator<Item = V>,
+    {
+        let mut values = values.into_iter();
         let rows = self.rows_len();
-        let mut additional_values = VecDeque::with_capacity(rows);
-        for i in 0..rows {
-            let row = self.get_row(i).unwrap();
-            let value = values(row);
-            additional_values.push_back(value);
-        }
+        let columns = self.columns_len();
         let new_column_index = self.indices_table.values().max().unwrap() + 1;
         self.indices_table.insert(column, new_column_index);
         for i in 0..rows {
-            let new_elem_index = i * self.columns_len() + new_column_index;
+            let new_elem_index = i * columns + new_column_index;
             self.values_vector
-                .insert(new_elem_index, additional_values.pop_front().unwrap());
+                .insert(new_elem_index, values.next().unwrap())
         }
+    }
+
+    pub fn add_column_with<F>(&mut self, column: K, mut values: F)
+    where
+        F: FnMut(HashTableRowBorrowed<'_, K, V>) -> V,
+    {
+        let rows = self.rows_len();
+        self.add_column(
+            column,
+            (0..rows)
+                .map(|i| {
+                    let row = self.get_row(i).unwrap();
+                    values(row)
+                })
+                .collect::<Vec<_>>(),
+        );
     }
 
     pub fn remove_column<Q>(&mut self, column: &Q) -> Option<HashTableColumnOwned<K, V>>
