@@ -1,4 +1,4 @@
-use std::{borrow::Borrow, collections::VecDeque, hash::Hash};
+use std::{borrow::Borrow, hash::Hash};
 
 use crate::{
     column::{borrowed::HashTableColumnBorrowed, owned::HashTableColumnOwned},
