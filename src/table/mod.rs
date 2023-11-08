@@ -170,22 +170,21 @@ where
         K: Borrow<Q>,
         Q: Hash + Eq + ?Sized,
     {
-        if self.indices_table.contains_key(column) {
-            let rows = self.rows_len();
-            let (key, column_index) = self.indices_table.remove_entry(column).unwrap();
-            for v in self.indices_table.values_mut() {
-                if *v > column_index {
-                    *v -= 1;
-                }
-            }
-            let mut buf = Vec::with_capacity(self.rows_len());
-            for i in 0..rows {
-                let index = i * self.columns_len() + column_index;
-                buf.push(self.values_vector.remove(index));
-            }
-            Some(HashTableColumnOwned { key, values: buf })
-        } else {
-            None
+        if !self.indices_table.contains_key(column) {
+            return None;
         }
+        let rows = self.rows_len();
+        let (key, column_index) = self.indices_table.remove_entry(column).unwrap();
+        for v in self.indices_table.values_mut() {
+            if *v > column_index {
+                *v -= 1;
+            }
+        }
+        let mut buf = Vec::with_capacity(self.rows_len());
+        for i in 0..rows {
+            let index = i * self.columns_len() + column_index;
+            buf.push(self.values_vector.remove(index));
+        }
+        Some(HashTableColumnOwned { key, values: buf })
     }
 }
