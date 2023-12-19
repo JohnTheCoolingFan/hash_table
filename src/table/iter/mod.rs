@@ -1,7 +1,7 @@
 pub mod directions;
 pub mod owned;
 
-use crate::*;
+use crate::{row::borrowed::HashTableRowBorrowed, *};
 
 impl<K, V> IntoIterator for HashTable<K, V>
 where
@@ -38,5 +38,30 @@ where
                 .remove_row(self.inner.rows_len() - 1)
                 .map(Into::into)
         }
+    }
+}
+
+impl<K, V> HashTable<K, V> {
+    pub fn iter(&self) -> HashTableBorrowedIter<'_, K, V> {
+        HashTableBorrowedIter {
+            row: 0,
+            table: self,
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct HashTableBorrowedIter<'t, K, V> {
+    row: usize,
+    table: &'t HashTable<K, V>,
+}
+
+impl<'t, K, V> Iterator for HashTableBorrowedIter<'t, K, V> {
+    type Item = HashTableRowBorrowed<'t, K, V>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let val = self.table.get_row(self.row)?;
+        self.row += 1;
+        Some(val)
     }
 }
