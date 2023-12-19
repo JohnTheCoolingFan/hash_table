@@ -1,3 +1,5 @@
+use std::ops::Range;
+
 use crate::{
     row::{borrowed::HashTableRowBorrowed, mutable::HashTableMutableBorrowedRow},
     *,
@@ -49,12 +51,14 @@ impl<K, V> HashTable<K, V> {
         }
     }
 
+    /*
     pub fn iter_mut(&mut self) -> HashTableMutIter<'_, K, V> {
         HashTableMutIter {
-            row: 0,
+            row: (0..self.rows_len()),
             table: self,
         }
     }
+    */
 }
 
 #[derive(Debug)]
@@ -73,9 +77,10 @@ impl<'t, K, V> Iterator for HashTableBorrowedIter<'t, K, V> {
     }
 }
 
+/*
 #[derive(Debug)]
 pub struct HashTableMutIter<'t, K, V> {
-    row: usize,
+    row: Range<usize>,
     table: &'t mut HashTable<K, V>,
 }
 
@@ -83,8 +88,7 @@ impl<'t, K, V> Iterator for HashTableMutIter<'t, K, V> {
     type Item = HashTableMutableBorrowedRow<'t, K, V>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let val = self.table.get_row_mut(self.row)?;
-        self.row += 1;
-        Some(val)
+        self.table.get_row_mut(self.row.next()?)
     }
 }
+*/
