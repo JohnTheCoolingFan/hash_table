@@ -1,7 +1,7 @@
-pub mod directions;
-pub mod owned;
-
-use crate::{row::borrowed::HashTableRowBorrowed, *};
+use crate::{
+    row::{borrowed::HashTableRowBorrowed, mutable::HashTableMutableBorrowedRow},
+    *,
+};
 
 impl<K, V> IntoIterator for HashTable<K, V>
 where
@@ -36,7 +36,7 @@ where
         } else {
             self.inner
                 .remove_row(self.inner.rows_len() - 1)
-                .map(Into::into)
+                .map(|row| row.into_iter().map(|(k, v)| (k.clone(), v)).collect())
         }
     }
 }
@@ -44,6 +44,13 @@ where
 impl<K, V> HashTable<K, V> {
     pub fn iter(&self) -> HashTableBorrowedIter<'_, K, V> {
         HashTableBorrowedIter {
+            row: 0,
+            table: self,
+        }
+    }
+
+    pub fn iter_mut(&mut self) -> HashTableMutIter<'_, K, V> {
+        HashTableMutIter {
             row: 0,
             table: self,
         }
@@ -61,6 +68,22 @@ impl<'t, K, V> Iterator for HashTableBorrowedIter<'t, K, V> {
 
     fn next(&mut self) -> Option<Self::Item> {
         let val = self.table.get_row(self.row)?;
+        self.row += 1;
+        Some(val)
+    }
+}
+
+#[derive(Debug)]
+pub struct HashTableMutIter<'t, K, V> {
+    row: usize,
+    table: &'t mut HashTable<K, V>,
+}
+
+impl<'t, K, V> Iterator for HashTableMutIter<'t, K, V> {
+    type Item = HashTableMutableBorrowedRow<'t, K, V>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let val = self.table.get_row_mut(self.row)?;
         self.row += 1;
         Some(val)
     }
