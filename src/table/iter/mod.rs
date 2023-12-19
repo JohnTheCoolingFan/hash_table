@@ -1,9 +1,4 @@
-use std::ops::Range;
-
-use crate::{
-    row::{borrowed::HashTableRowBorrowed, mutable::HashTableMutableBorrowedRow},
-    *,
-};
+use crate::{row::borrowed::HashTableRowBorrowed, *};
 
 impl<K, V> IntoIterator for HashTable<K, V>
 where
