@@ -2,7 +2,10 @@ use std::{borrow::Borrow, hash::Hash};
 
 use crate::{
     column::{borrowed::HashTableColumnBorrowed, owned::HashTableColumnOwned},
-    row::{borrowed::HashTableRowBorrowed, value_owned::HashTableRowValueOwned},
+    row::{
+        borrowed::HashTableRowBorrowed, mutable::HashTableMutableRow,
+        value_owned::HashTableRowValueOwned,
+    },
     HashMap,
 };
 
@@ -33,13 +36,24 @@ impl<K, V> HashTable<K, V> {
     }
 
     pub fn get_row(&self, row: usize) -> Option<HashTableRowBorrowed<'_, K, V>> {
-        if row < self.values_vector.len() / self.columns_len() {
+        if row >= self.rows_len() {
+            None
+        } else {
             Some(HashTableRowBorrowed {
                 parent_table: self,
                 row_idx: row,
             })
-        } else {
+        }
+    }
+
+    pub fn get_row_mut(&mut self, row: usize) -> Option<HashTableMutableRow<'_, K, V>> {
+        if row >= self.rows_len() {
             None
+        } else {
+            Some(HashTableMutableRow {
+                table: self,
+                row_idx: row,
+            })
         }
     }
 }
