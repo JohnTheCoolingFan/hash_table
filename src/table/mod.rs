@@ -3,7 +3,7 @@ use std::{borrow::Borrow, hash::Hash};
 use crate::{
     column::{borrowed::HashTableColumnBorrowed, owned::HashTableColumnOwned},
     row::{
-        borrowed::HashTableRowBorrowed, mutable::HashTableMutableRow,
+        borrowed::HashTableRowBorrowed, mutable::HashTableMutableBorrowedRow,
         value_owned::HashTableRowValueOwned,
     },
     HashMap,
@@ -46,13 +46,20 @@ impl<K, V> HashTable<K, V> {
         }
     }
 
-    pub fn get_row_mut(&mut self, row: usize) -> Option<HashTableMutableRow<'_, K, V>> {
+    #[inline]
+    fn row_start(&self, row: usize) -> usize {
+        self.columns_len() * row
+    }
+
+    pub fn get_row_mut(&mut self, row: usize) -> Option<HashTableMutableBorrowedRow<'_, K, V>> {
         if row >= self.rows_len() {
             None
         } else {
-            Some(HashTableMutableRow {
-                table: self,
-                row_idx: row,
+            let start = self.columns_len() * row;
+            let end = start + self.columns_len();
+            Some(HashTableMutableBorrowedRow {
+                indices_table: &self.indices_table,
+                values: &mut self.values_vector[start..end],
             })
         }
     }
@@ -96,16 +103,45 @@ where
         columns.into_iter().zip(0_usize..).collect()
     }
 
+    #[inline]
+    fn column_index<Q>(&self, column: &Q) -> Option<usize>
+    where
+        K: Borrow<Q>,
+        Q: Hash + Eq + ?Sized,
+    {
+        self.indices_table.get(column).copied()
+    }
+
+    #[inline]
+    fn elem_index<Q>(&self, column: &Q, row: usize) -> Option<usize>
+    where
+        K: Borrow<Q>,
+        Q: Hash + Eq + ?Sized,
+    {
+        self.column_index(column)
+            .map(|col_idx| self.row_start(row) + col_idx)
+    }
+
+    #[inline]
     pub fn get<Q>(&self, column: &Q, row: usize) -> Option<&V>
     where
         K: Borrow<Q>,
         Q: Hash + Eq + ?Sized,
     {
-        let column_index = self.indices_table.get(column)?;
-        self.values_vector
-            .get(self.columns_len() * row + column_index)
+        self.values_vector.get(self.elem_index(column, row)?)
     }
 
+    #[inline]
+    pub fn get_mut<Q>(&mut self, column: &Q, row: usize) -> Option<&mut V>
+    where
+        K: Borrow<Q>,
+        Q: Hash + Eq + ?Sized,
+    {
+        let idx = self.elem_index(column, row)?;
+        self.values_vector.get_mut(idx)
+    }
+
+    #[inline]
     pub fn get_column<'t, 'k, Q>(
         &'t self,
         column: &'k Q,
