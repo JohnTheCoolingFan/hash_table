@@ -1,6 +1,6 @@
-use std::{borrow::Borrow, hash::Hash};
+use std::borrow::Borrow;
 
-use crate::HashTable;
+use crate::*;
 
 #[derive(Debug)]
 pub struct HashTableColumnBorrowed<'t, 'k, K, Q, V> {
