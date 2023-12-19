@@ -1,41 +1,56 @@
-use std::ops::Deref;
+use std::borrow::Borrow;
 
 use crate::typedefs::*;
 
-/// `HashTable` row that takes ownership over the row's values. If you want teh keys to be owned too,
-/// use the `Into::into` implementation to convert to a `HashMap<K, V>`
-#[derive(Debug)]
+/// `HashTable` row that takes ownership over the row's values. If you want the keys to be owned too,
+/// use the `Into::into` implementation to convert to a `HashMap<OwnedK, V>`
+#[derive(Debug, Clone)]
 pub struct HashTableRowValueOwned<'t, K, V> {
-    pub(crate) inner: HashMap<&'t K, V>,
+    pub(crate) parent_indices_table: &'t HashMap<K, usize>,
+    pub(crate) values: Vec<V>,
 }
 
-impl<'t, K, OwnedK, V> From<HashTableRowValueOwned<'t, K, V>> for HashMap<OwnedK, V>
-where
-    K: ToOwned<Owned = OwnedK>,
-    OwnedK: Hash + Eq,
-{
-    fn from(value: HashTableRowValueOwned<'t, K, V>) -> Self {
-        value
-            .inner
-            .into_iter()
-            .map(|(k, v)| (k.to_owned(), v))
-            .collect()
+impl<'t, K, V> HashTableRowValueOwned<'t, K, V> {
+    pub fn get<Q>(&self, key: &Q) -> Option<&V>
+    where
+        K: Borrow<Q>,
+        K: Hash + Eq,
+        Q: Hash + Eq + ?Sized,
+    {
+        let idx = self.parent_indices_table.get(key)?;
+        self.values.get(*idx)
     }
 }
 
-impl<'t, K, V> IntoIterator for HashTableRowValueOwned<'t, K, V> {
-    type Item = <HashMap<&'t K, V> as IntoIterator>::Item;
-    type IntoIter = <HashMap<&'t K, V> as IntoIterator>::IntoIter;
+impl<'t, K, V> IntoIterator for HashTableRowValueOwned<'t, K, V>
+where
+    K: Hash + Eq,
+{
+    type Item = (&'t K, V);
+    type IntoIter = HashTableRowValueOwnedIntoIter<'t, K, V>;
 
     fn into_iter(self) -> Self::IntoIter {
-        self.inner.into_iter()
+        todo!()
     }
 }
 
-impl<'t, K, V> Deref for HashTableRowValueOwned<'t, K, V> {
-    type Target = HashMap<&'t K, V>;
+#[derive(Debug)]
+pub struct HashTableRowValueOwnedIntoIter<'t, K, V> {
+    values: Vec<Option<V>>,
+    indices_table_iter: <&'t HashMap<K, usize> as IntoIterator>::IntoIter,
+}
 
-    fn deref(&self) -> &Self::Target {
-        &self.inner
+impl<'t, K, V> Iterator for HashTableRowValueOwnedIntoIter<'t, K, V> {
+    type Item = (&'t K, V);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.indices_table_iter.next().map(|(k, i)| {
+            (
+                k,
+                self.values[*i]
+                    .take()
+                    .expect("Each index is only used once"),
+            )
+        })
     }
 }

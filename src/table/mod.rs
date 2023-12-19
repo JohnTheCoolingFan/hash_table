@@ -56,6 +56,19 @@ impl<K, V> HashTable<K, V> {
             })
         }
     }
+
+    pub fn remove_row(&mut self, row: usize) -> Option<HashTableRowValueOwned<'_, K, V>> {
+        if row >= self.rows_len() {
+            return None;
+        }
+        let row_start = row * self.rows_len();
+        let row_end = row_start + self.rows_len();
+        let values = self.values_vector.drain(row_start..row_end);
+        Some(HashTableRowValueOwned {
+            parent_indices_table: &self.indices_table,
+            values: values.collect(),
+        })
+    }
 }
 
 impl<K, V> HashTable<K, V>
@@ -128,24 +141,6 @@ where
         keys.sort_by_key(|(_, i)| *i);
         self.values_vector
             .extend(keys.into_iter().map(|(k, _)| row_generator(k)))
-    }
-
-    pub fn remove_row(&mut self, row: usize) -> Option<HashTableRowValueOwned<'_, K, V>> {
-        if row >= self.rows_len() {
-            return None;
-        }
-        let row_start = row * self.rows_len();
-        let row_end = row_start + self.rows_len();
-        let values = self.values_vector.drain(row_start..row_end);
-        let mut keys = self
-            .indices_table
-            .iter()
-            .map(|(k, v)| (k, *v))
-            .collect::<Vec<_>>();
-        keys.sort_by_key(|(_, i)| *i);
-        Some(HashTableRowValueOwned {
-            inner: keys.into_iter().map(|(k, _)| k).zip(values).collect(),
-        })
     }
 
     pub fn add_column<I>(&mut self, column: K, values: I)
