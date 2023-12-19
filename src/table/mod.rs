@@ -2,7 +2,7 @@ use std::{borrow::Borrow, hash::Hash};
 
 use crate::{
     column::{borrowed::HashTableColumnBorrowed, owned::HashTableColumnOwned},
-    row::{borrowed::HashTableRowBorrowed, owned::HashTableRowOwned},
+    row::{borrowed::HashTableRowBorrowed, value_owned::HashTableRowValueOwned},
     HashMap,
 };
 
@@ -115,7 +115,7 @@ where
             .extend(keys.into_iter().map(|(k, _)| row_generator(k)))
     }
 
-    pub fn remove_row(&mut self, row: usize) -> Option<HashTableRowOwned<'_, K, V>> {
+    pub fn remove_row(&mut self, row: usize) -> Option<HashTableRowValueOwned<'_, K, V>> {
         if row >= self.rows_len() {
             return None;
         }
@@ -128,7 +128,7 @@ where
             .map(|(k, v)| (k, *v))
             .collect::<Vec<_>>();
         keys.sort_by_key(|(_, i)| *i);
-        Some(HashTableRowOwned {
+        Some(HashTableRowValueOwned {
             inner: keys.into_iter().map(|(k, _)| k).zip(values).collect(),
         })
     }
@@ -186,5 +186,43 @@ where
             buf.push(self.values_vector.remove(index));
         }
         Some(HashTableColumnOwned { key, values: buf })
+    }
+}
+
+impl<K, V> IntoIterator for HashTable<K, V>
+where
+    K: Clone,
+    K: Hash + Eq,
+{
+    type Item = HashMap<K, V>;
+    type IntoIter = HashTableIntoIter<K, V>;
+
+    /// Iterator taht takes ownership of both keys and values, cloning the keys each time and
+    /// allocating a new hashmap
+    fn into_iter(self) -> Self::IntoIter {
+        HashTableIntoIter { inner: self }
+    }
+}
+
+#[derive(Debug)]
+pub struct HashTableIntoIter<K, V> {
+    inner: HashTable<K, V>,
+}
+
+impl<K, V> Iterator for HashTableIntoIter<K, V>
+where
+    K: Clone,
+    K: Hash + Eq,
+{
+    type Item = HashMap<K, V>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.inner.rows_len() == 0 {
+            None
+        } else {
+            self.inner
+                .remove_row(self.inner.rows_len() - 1)
+                .map(Into::into)
+        }
     }
 }
