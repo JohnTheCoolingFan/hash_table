@@ -9,3 +9,5 @@ cfg_if! {
         pub use std::collections::hash_map::Keys;
     }
 }
+
+pub use std::hash::Hash;
