@@ -20,6 +20,7 @@ impl<K, V> HashTable<K, V> {
         self.indices_table.len()
     }
 
+    #[inline(always)]
     pub fn rows_len(&self) -> usize {
         self.values_vector.len() / self.columns_len()
     }
@@ -28,6 +29,17 @@ impl<K, V> HashTable<K, V> {
         Self {
             indices_table: HashMap::with_capacity(columns),
             values_vector: Vec::with_capacity(columns * rows),
+        }
+    }
+
+    pub fn get_row(&self, row: usize) -> Option<HashTableRowBorrowed<'_, K, V>> {
+        if row < self.values_vector.len() / self.columns_len() {
+            Some(HashTableRowBorrowed {
+                parent_table: self,
+                row_idx: row,
+            })
+        } else {
+            None
         }
     }
 }
@@ -65,17 +77,6 @@ where
         let column_index = self.indices_table.get(column)?;
         self.values_vector
             .get(self.columns_len() * row + column_index)
-    }
-
-    pub fn get_row(&self, row: usize) -> Option<HashTableRowBorrowed<'_, K, V>> {
-        if row < self.values_vector.len() / self.columns_len() {
-            Some(HashTableRowBorrowed {
-                parent_table: self,
-                row_idx: row,
-            })
-        } else {
-            None
-        }
     }
 
     pub fn get_column<'t, 'k, Q>(
