@@ -3,7 +3,10 @@ name = "hash_table"
 version = "0.1.0"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+description = "Adds a HashTable type, allowing to store values in a table with integer-indexed rows and hashable keys for columns"
+license = "MIT"
+documentation = "https://docs.rs/hash_table/latest"
+repository = "https://github.com/JohnTheCoolingFan/hash_table"
 
 [dependencies]
 cfg-if = "1.0.0"
