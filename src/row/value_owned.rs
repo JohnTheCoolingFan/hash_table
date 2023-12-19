@@ -1,6 +1,6 @@
-use std::{hash::Hash, ops::Deref};
+use std::ops::Deref;
 
-use crate::typedefs::HashMap;
+use crate::typedefs::*;
 
 /// `HashTable` row that takes ownership over the row's values. If you want teh keys to be owned too,
 /// use the `Into::into` implementation to convert to a `HashMap<K, V>`
