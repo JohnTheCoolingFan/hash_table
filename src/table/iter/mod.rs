@@ -1,4 +1,4 @@
-use crate::{row::borrowed::HashTableRowBorrowed, *};
+use crate::{column::owned::HashTableColumnOwned, row::borrowed::HashTableRowBorrowed, *};
 
 impl<K, V> IntoIterator for HashTable<K, V>
 where
@@ -54,6 +54,14 @@ impl<K, V> HashTable<K, V> {
         }
     }
     */
+
+    pub fn into_iter_columns(self) -> HashTableOwnedIntoIterColumn<K, V> {
+        HashTableOwnedIntoIterColumn {
+            row_len: self.columns_len(),
+            indices_iter: self.indices_table.into_iter(),
+            values: self.values_vector.into_iter().map(Option::Some).collect(),
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -87,3 +95,31 @@ impl<'t, K, V> Iterator for HashTableMutIter<'t, K, V> {
     }
 }
 */
+
+#[derive(Debug)]
+pub struct HashTableOwnedIntoIterColumn<K, V> {
+    indices_iter: <HashMap<K, usize> as IntoIterator>::IntoIter,
+    values: Vec<Option<V>>,
+    row_len: usize,
+}
+
+impl<K, V> Iterator for HashTableOwnedIntoIterColumn<K, V>
+where
+    K: Hash + Eq,
+{
+    type Item = HashTableColumnOwned<K, V>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let (key, idx) = self.indices_iter.next()?;
+        let values = self
+            .values
+            .chunks_exact_mut(self.row_len)
+            .map(|chunk| {
+                chunk[idx]
+                    .take()
+                    .expect("Each column is accessed only once")
+            })
+            .collect();
+        Some(HashTableColumnOwned { key, values })
+    }
+}
