@@ -1,6 +1,4 @@
-use std::borrow::Borrow;
-
-use crate::*;
+use std::ops::Deref;
 
 #[derive(Debug)]
 pub struct HashTableColumnBorrowed<'t, 'k, Q, V> {
@@ -23,9 +21,11 @@ impl<'t, 'k, Q, V> HashTableColumnBorrowed<'t, 'k, Q, V> {
     }
 }
 
-impl<'t, 'k, Q, V> HashTableColumnBorrowed<'t, 'k, Q, V> {
-    pub fn get(&self, row: usize) -> Option<&'t V> {
-        self.values.get(row).copied()
+impl<'t, Q, V> Deref for HashTableColumnBorrowed<'t, '_, Q, V> {
+    type Target = Vec<&'t V>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.values
     }
 }
 
@@ -51,7 +51,7 @@ impl<'t, 'k, Q, V> Iterator for BorrowedColumnIter<'t, 'k, Q, V> {
     type Item = &'t V;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let val = self.column.get(self.row_idx);
+        let val = self.column.get(self.row_idx).copied();
         self.row_idx += 1;
         val
     }
