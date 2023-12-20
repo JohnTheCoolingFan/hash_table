@@ -1,3 +1,5 @@
+//! HashTable and its associated types
+
 use std::{borrow::Borrow, hash::Hash};
 
 use crate::{
@@ -11,6 +13,8 @@ use crate::{
 
 pub mod iter;
 
+/// This data structure represents a 2-dimensional grid of values. Each element is indexed by a
+/// hashable key and a row index. It's also possible to access a whole row or column of the table.
 #[derive(Debug, Default, Clone)]
 pub struct HashTable<K, V> {
     pub(crate) indices_table: HashMap<K, usize>,
@@ -18,16 +22,19 @@ pub struct HashTable<K, V> {
 }
 
 impl<K, V> HashTable<K, V> {
+    /// Returns the number of columns in this table.
     #[inline(always)]
     pub fn columns_len(&self) -> usize {
         self.indices_table.len()
     }
 
+    /// Returns the number of rows in this table.
     #[inline(always)]
     pub fn rows_len(&self) -> usize {
         self.values_vector.len() / self.columns_len()
     }
 
+    /// Create new [`HashTable`] with specified amoutn of reserved capacity.
     pub fn with_capacity(columns: usize, rows: usize) -> Self {
         Self {
             indices_table: HashMap::with_capacity(columns),
@@ -35,6 +42,15 @@ impl<K, V> HashTable<K, V> {
         }
     }
 
+    /// `values_vector` index of where the row starts.
+    #[inline]
+    fn row_start(&self, row: usize) -> usize {
+        self.columns_len() * row
+    }
+
+    /// Get a row of the table.
+    ///
+    /// Returns None if `row` is bigger than or equal to the number of rows.
     pub fn get_row(&self, row: usize) -> Option<HashTableRowBorrowed<'_, K, V>> {
         if row >= self.rows_len() {
             None
@@ -48,11 +64,9 @@ impl<K, V> HashTable<K, V> {
         }
     }
 
-    #[inline]
-    fn row_start(&self, row: usize) -> usize {
-        self.columns_len() * row
-    }
-
+    /// Get row with mutable access.
+    ///
+    /// Returns None if `row` is bigger than or equal to the number of row.
     pub fn get_row_mut(&mut self, row: usize) -> Option<HashTableMutableBorrowedRow<'_, K, V>> {
         if row >= self.rows_len() {
             None
@@ -66,6 +80,10 @@ impl<K, V> HashTable<K, V> {
         }
     }
 
+    /// Remove a row and take ownership of its values.
+    ///
+    /// This still borrows the hashtable immutably to allow getting the values by a key. Keys can
+    /// be converted to an owned variant, usually by cloning them.
     pub fn remove_row(&mut self, row: usize) -> Option<HashTableRowValueOwned<'_, K, V>> {
         if row >= self.rows_len() {
             return None;
@@ -84,6 +102,7 @@ impl<K, V> HashTable<K, V>
 where
     K: Hash + Eq,
 {
+    /// Create a [`HashTable`] from iterator of column keys.
     pub fn with_columns(columns: impl IntoIterator<Item = K>) -> Self {
         let indices_table = Self::indices_table_from_iterator(columns);
         Self {
@@ -92,6 +111,8 @@ where
         }
     }
 
+    /// Create a [`HashTable`] from iterator of column keys and with allocated capacity for at
+    /// least the specified amount of `rows`.
     pub fn with_columns_and_capacity(columns: impl IntoIterator<Item = K>, rows: usize) -> Self {
         let indices_table = Self::indices_table_from_iterator(columns);
         let columns_count = indices_table.len();
@@ -101,10 +122,12 @@ where
         }
     }
 
+    /// Make an indices table from an iterator.
     fn indices_table_from_iterator(columns: impl IntoIterator<Item = K>) -> HashMap<K, usize> {
         columns.into_iter().zip(0_usize..).collect()
     }
 
+    /// Index of a column.
     #[inline]
     fn column_index<Q>(&self, column: &Q) -> Option<usize>
     where
@@ -114,6 +137,7 @@ where
         self.indices_table.get(column).copied()
     }
 
+    /// Index of an element.
     #[inline]
     fn elem_index<Q>(&self, column: &Q, row: usize) -> Option<usize>
     where
@@ -124,6 +148,9 @@ where
             .map(|col_idx| self.row_start(row) + col_idx)
     }
 
+    /// Get an element from the table.
+    ///
+    /// Will return None of the `column` does not exist in teh table or `row` is out of range.
     #[inline]
     pub fn get<Q>(&self, column: &Q, row: usize) -> Option<&V>
     where
@@ -133,6 +160,9 @@ where
         self.values_vector.get(self.elem_index(column, row)?)
     }
 
+    /// Get an element from the table with mutable access.
+    ///
+    /// Will return None of the `column` does not exist in the table or `row` is out of range.
     #[inline]
     pub fn get_mut<Q>(&mut self, column: &Q, row: usize) -> Option<&mut V>
     where
@@ -143,6 +173,9 @@ where
         self.values_vector.get_mut(idx)
     }
 
+    /// Get an immutable access to a table column.
+    ///
+    /// Will return None if the `column` does not exist in the table.
     #[inline]
     pub fn get_column<'t, 'k, Q>(
         &'t self,
@@ -164,6 +197,7 @@ where
             })
     }
 
+    /// Add a row to the table from an iterator of key-value pairs.
     pub fn add_row<I>(&mut self, row: I)
     where
         I: IntoIterator<Item = (K, V)>,
@@ -173,6 +207,8 @@ where
         self.values_vector.extend(pairs.into_iter().map(|(_, v)| v));
     }
 
+    /// Add a row to the table using a generator function that returns the value from the column
+    /// key.
     pub fn add_row_with<F>(&mut self, mut row_generator: F)
     where
         F: FnMut(&K) -> V,
@@ -183,6 +219,7 @@ where
             .extend(keys.into_iter().map(|(k, _)| row_generator(k)))
     }
 
+    /// Add a column with values provided through an iterator.
     pub fn add_column<I>(&mut self, column: K, values: I)
     where
         I: IntoIterator<Item = V>,
@@ -199,6 +236,8 @@ where
         }
     }
 
+    /// Add a column using a generator function taht returns a value based on the values of the
+    /// row.
     pub fn add_column_with<F>(&mut self, column: K, mut values: F)
     where
         F: FnMut(HashTableRowBorrowed<'_, K, V>) -> V,
@@ -215,6 +254,9 @@ where
         );
     }
 
+    /// Remove a column from teh table and take ownership of the key and values.
+    ///
+    /// Will return None if the `column` does not exist in teh table.
     pub fn remove_column<Q>(&mut self, column: &Q) -> Option<HashTableColumnOwned<K, V>>
     where
         K: Borrow<Q>,
