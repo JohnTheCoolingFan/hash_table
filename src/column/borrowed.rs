@@ -1,5 +1,8 @@
+//! Borrowed column access
+
 use std::ops::Deref;
 
+/// Borrowed view into a table's column
 #[derive(Debug)]
 pub struct HashTableColumnBorrowed<'t, 'k, Q, V> {
     pub(crate) column: &'k Q,
@@ -16,6 +19,7 @@ impl<Q, V> Clone for HashTableColumnBorrowed<'_, '_, Q, V> {
 }
 
 impl<'t, 'k, Q, V> HashTableColumnBorrowed<'t, 'k, Q, V> {
+    /// Get the key of the table column
     pub fn column_key(&self) -> &'k Q {
         self.column
     }
@@ -24,6 +28,7 @@ impl<'t, 'k, Q, V> HashTableColumnBorrowed<'t, 'k, Q, V> {
 impl<'t, Q, V> Deref for HashTableColumnBorrowed<'t, '_, Q, V> {
     type Target = Vec<&'t V>;
 
+    /// This [`Deref`] implementation allows using this column as a regular [`Vec`]
     fn deref(&self) -> &Self::Target {
         &self.values
     }
@@ -40,6 +45,9 @@ impl<'t, Q, V> IntoIterator for HashTableColumnBorrowed<'t, '_, Q, V> {
     }
 }
 
+/// An iterator over borrowed values of a table column.
+///
+/// Returned by [`HashTableColumnBorrowed::into_iter`]
 #[derive(Debug)]
 pub struct BorrowedColumnIter<'t, V> {
     inner: <Vec<&'t V> as IntoIterator>::IntoIter,
