@@ -1,9 +1,13 @@
+//! Value-owned row access
+
 use std::borrow::Borrow;
 
 use crate::typedefs::*;
 
-/// `HashTable` row that takes ownership over the row's values. If you want the keys to be owned too,
-/// use the `Into::into` implementation to convert to a `HashMap<OwnedK, V>`
+/// `HashTable` row that takes ownership over the row's values.
+///
+/// If you want the keys to be owned too, you can do so by iterating over this row and cloning the
+/// values and then collecting into a hashmap.
 #[derive(Debug, Clone)]
 pub struct HashTableRowValueOwned<'t, K, V> {
     pub(crate) parent_indices_table: &'t HashMap<K, usize>,
@@ -30,7 +34,10 @@ where
     type IntoIter = HashTableRowValueOwnedIntoIter<'t, K, V>;
 
     fn into_iter(self) -> Self::IntoIter {
-        todo!()
+        HashTableRowValueOwnedIntoIter {
+            values: self.values.into_iter().map(Option::Some).collect(),
+            indices_table_iter: self.parent_indices_table.iter(),
+        }
     }
 }
 
