@@ -29,30 +29,26 @@ impl<'t, Q, V> Deref for HashTableColumnBorrowed<'t, '_, Q, V> {
     }
 }
 
-impl<'t, 'k, Q, V> IntoIterator for HashTableColumnBorrowed<'t, 'k, Q, V> {
+impl<'t, Q, V> IntoIterator for HashTableColumnBorrowed<'t, '_, Q, V> {
     type Item = &'t V;
-    type IntoIter = BorrowedColumnIter<'t, 'k, Q, V>;
+    type IntoIter = BorrowedColumnIter<'t, V>;
 
     fn into_iter(self) -> Self::IntoIter {
         BorrowedColumnIter {
-            column: self,
-            row_idx: 0,
+            inner: self.values.into_iter(),
         }
     }
 }
 
 #[derive(Debug)]
-pub struct BorrowedColumnIter<'t, 'k, Q, V> {
-    column: HashTableColumnBorrowed<'t, 'k, Q, V>,
-    row_idx: usize,
+pub struct BorrowedColumnIter<'t, V> {
+    inner: <Vec<&'t V> as IntoIterator>::IntoIter,
 }
 
-impl<'t, 'k, Q, V> Iterator for BorrowedColumnIter<'t, 'k, Q, V> {
+impl<'t, V> Iterator for BorrowedColumnIter<'t, V> {
     type Item = &'t V;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let val = self.column.get(self.row_idx).copied();
-        self.row_idx += 1;
-        val
+        self.inner.next()
     }
 }
