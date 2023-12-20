@@ -39,9 +39,11 @@ impl<K, V> HashTable<K, V> {
         if row >= self.rows_len() {
             None
         } else {
+            let start = self.row_start(row);
+            let end = start + self.columns_len();
             Some(HashTableRowBorrowed {
-                parent_table: self,
-                row_idx: row,
+                indices_table: &self.indices_table,
+                row_values: &self.values_vector[start..end],
             })
         }
     }

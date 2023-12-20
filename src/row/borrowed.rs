@@ -3,9 +3,9 @@ use std::borrow::Borrow;
 use crate::*;
 
 #[derive(Debug)]
-pub struct HashTableRowBorrowed<'a, K, V> {
-    pub(crate) parent_table: &'a HashTable<K, V>,
-    pub(crate) row_idx: usize,
+pub struct HashTableRowBorrowed<'t, K, V> {
+    pub(crate) indices_table: &'t HashMap<K, usize>,
+    pub(crate) row_values: &'t [V],
 }
 
 impl<K, V> Clone for HashTableRowBorrowed<'_, K, V> {
@@ -16,54 +16,57 @@ impl<K, V> Clone for HashTableRowBorrowed<'_, K, V> {
 
 impl<K, V> Copy for HashTableRowBorrowed<'_, K, V> {}
 
-impl<'a, K, V> HashTableRowBorrowed<'a, K, V>
+impl<'t, K, V> HashTableRowBorrowed<'t, K, V>
 where
     K: Hash + Eq,
 {
-    pub fn get<Q>(&self, column: &Q) -> Option<&'a V>
+    pub fn get<Q>(&self, column: &Q) -> Option<&'t V>
     where
         K: Borrow<Q>,
         Q: Hash + Eq + ?Sized,
     {
-        self.parent_table.get(column, self.row_idx)
+        self.indices_table.get(column).map(|i| &self.row_values[*i])
     }
 
-    pub fn columns_keys(&self) -> Keys<'a, K, usize> {
-        self.parent_table.indices_table.keys()
+    pub fn columns_keys(&self) -> Keys<'t, K, usize> {
+        self.indices_table.keys()
+    }
+
+    pub fn columns_len(&self) -> usize {
+        self.indices_table.len()
+    }
+}
+
+impl<'t, K, V> IntoIterator for HashTableRowBorrowed<'t, K, V>
+where
+    K: Hash + Eq,
+{
+    type Item = (&'t K, &'t V);
+    type IntoIter = BorrowedRowIter<'t, K, V>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        BorrowedRowIter {
+            columns_iter: self.indices_table.iter(),
+            values: self.row_values,
+        }
     }
 }
 
 #[derive(Debug)]
-pub struct BorrowedRowIter<'a, K, V> {
-    row: HashTableRowBorrowed<'a, K, V>,
-    columns_iter: Keys<'a, K, usize>,
+pub struct BorrowedRowIter<'t, K, V> {
+    columns_iter: <&'t HashMap<K, usize> as IntoIterator>::IntoIter,
+    values: &'t [V],
 }
 
-impl<'a, K, V> Iterator for BorrowedRowIter<'a, K, V>
+impl<'t, K, V> Iterator for BorrowedRowIter<'t, K, V>
 where
     K: Hash + Eq,
 {
-    type Item = (&'a K, &'a V);
+    type Item = (&'t K, &'t V);
 
     fn next(&mut self) -> Option<Self::Item> {
-        let key = self.columns_iter.next()?;
-        let val = self.row.get(key)?;
+        let (key, idx) = self.columns_iter.next()?;
+        let val = &self.values[*idx];
         Some((key, val))
-    }
-}
-
-impl<'a, K, V> IntoIterator for HashTableRowBorrowed<'a, K, V>
-where
-    K: Hash + Eq,
-{
-    type Item = (&'a K, &'a V);
-    type IntoIter = BorrowedRowIter<'a, K, V>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        let keys_iter = self.columns_keys();
-        BorrowedRowIter {
-            row: self,
-            columns_iter: keys_iter,
-        }
     }
 }
