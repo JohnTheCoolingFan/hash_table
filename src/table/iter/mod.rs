@@ -68,7 +68,11 @@ impl<K, V> HashTable<K, V> {
     }
 
     pub fn iter_columns(&self) -> HashTableBorrowedIterColumn<'_, K, V> {
-        todo!()
+        HashTableBorrowedIterColumn {
+            row_len: self.columns_len(),
+            indices_iter: self.indices_table.iter(),
+            values: &self.values_vector,
+        }
     }
 }
 
