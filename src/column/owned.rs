@@ -18,6 +18,10 @@ impl<K, V> HashTableColumnOwned<K, V> {
     pub fn into_key(self) -> K {
         self.key
     }
+
+    pub fn into_pair(self) -> (K, Vec<V>) {
+        (self.key, self.values)
+    }
 }
 
 impl<K, V> Deref for HashTableColumnOwned<K, V> {
