@@ -28,7 +28,7 @@ where
         self.parent_table.get(column, self.row_idx)
     }
 
-    pub fn columns_len(&self) -> Keys<'a, K, usize> {
+    pub fn columns_keys(&self) -> Keys<'a, K, usize> {
         self.parent_table.indices_table.keys()
     }
 }
@@ -60,7 +60,7 @@ where
     type IntoIter = BorrowedRowIter<'a, K, V>;
 
     fn into_iter(self) -> Self::IntoIter {
-        let keys_iter = self.columns_len();
+        let keys_iter = self.columns_keys();
         BorrowedRowIter {
             row: self,
             columns_iter: keys_iter,
