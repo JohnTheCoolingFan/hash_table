@@ -1,7 +1,10 @@
+//! Borrowed row access
+
 use std::borrow::Borrow;
 
 use crate::*;
 
+/// A row of a hash table that gives a borrowed access to its values
 #[derive(Debug)]
 pub struct HashTableRowBorrowed<'t, K, V> {
     pub(crate) indices_table: &'t HashMap<K, usize>,
@@ -20,6 +23,7 @@ impl<'t, K, V> HashTableRowBorrowed<'t, K, V>
 where
     K: Hash + Eq,
 {
+    /// Get an element of the row in the requested `column`
     pub fn get<Q>(&self, column: &Q) -> Option<&'t V>
     where
         K: Borrow<Q>,
@@ -28,10 +32,12 @@ where
         self.indices_table.get(column).map(|i| &self.row_values[*i])
     }
 
+    /// Return an iterator over the keys of the columns of the table
     pub fn columns_keys(&self) -> Keys<'t, K, usize> {
         self.indices_table.keys()
     }
 
+    /// Return an amount of columns in the row
     pub fn columns_len(&self) -> usize {
         self.indices_table.len()
     }
@@ -52,6 +58,9 @@ where
     }
 }
 
+/// Iterator over a row of a borrowed table
+///
+/// Returned by [`HashTableRowBorrowed::into_iter`]
 #[derive(Debug)]
 pub struct BorrowedRowIter<'t, K, V> {
     columns_iter: <&'t HashMap<K, usize> as IntoIterator>::IntoIter,

@@ -4,7 +4,7 @@ use std::borrow::Borrow;
 
 use crate::*;
 
-/// Row of a table with mutable access to the values
+/// Row of a table with mutable access to the values.
 #[derive(Debug)]
 pub struct HashTableMutableBorrowedRow<'t, K, V> {
     pub(crate) indices_table: &'t HashMap<K, usize>,
