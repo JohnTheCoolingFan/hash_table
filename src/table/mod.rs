@@ -147,19 +147,21 @@ where
     pub fn get_column<'t, 'k, Q>(
         &'t self,
         column: &'k Q,
-    ) -> Option<HashTableColumnBorrowed<'t, 'k, K, Q, V>>
+    ) -> Option<HashTableColumnBorrowed<'t, 'k, Q, V>>
     where
         K: Borrow<Q>,
         Q: Hash + Eq,
     {
-        if self.indices_table.contains_key(column) {
-            Some(HashTableColumnBorrowed {
-                parent_table: self,
+        self.indices_table
+            .get(column)
+            .map(|idx| HashTableColumnBorrowed {
                 column,
+                values: self
+                    .values_vector
+                    .chunks_exact(self.columns_len())
+                    .map(|chunk| &chunk[*idx])
+                    .collect(),
             })
-        } else {
-            None
-        }
     }
 
     pub fn add_row<I>(&mut self, row: I)
