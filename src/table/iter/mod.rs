@@ -1,4 +1,8 @@
-use crate::{column::owned::HashTableColumnOwned, row::borrowed::HashTableRowBorrowed, *};
+use crate::{
+    column::{borrowed::HashTableColumnBorrowed, owned::HashTableColumnOwned},
+    row::borrowed::HashTableRowBorrowed,
+    *,
+};
 
 impl<K, V> IntoIterator for HashTable<K, V>
 where
@@ -62,6 +66,10 @@ impl<K, V> HashTable<K, V> {
             values: self.values_vector.into_iter().map(Option::Some).collect(),
         }
     }
+
+    pub fn iter_columns(&self) -> HashTableBorrowedIterColumn<'_, K, V> {
+        todo!()
+    }
 }
 
 #[derive(Debug)]
@@ -121,5 +129,29 @@ where
             })
             .collect();
         Some(HashTableColumnOwned { key, values })
+    }
+}
+
+#[derive(Debug)]
+pub struct HashTableBorrowedIterColumn<'t, K, V> {
+    indices_iter: <&'t HashMap<K, usize> as IntoIterator>::IntoIter,
+    values: &'t [V],
+    row_len: usize,
+}
+
+impl<'t, K, V> Iterator for HashTableBorrowedIterColumn<'t, K, V> {
+    type Item = HashTableColumnBorrowed<'t, 't, K, V>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let (key, idx) = self.indices_iter.next()?;
+        let values = self
+            .values
+            .chunks_exact(self.row_len)
+            .map(|chunk| &chunk[*idx])
+            .collect();
+        Some(HashTableColumnBorrowed {
+            column: key,
+            values,
+        })
     }
 }
