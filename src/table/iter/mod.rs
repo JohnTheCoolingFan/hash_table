@@ -1,3 +1,5 @@
+//! Implementation of various ways to iterate over a hashtable
+
 use crate::{
     column::{borrowed::HashTableColumnBorrowed, owned::HashTableColumnOwned},
     row::borrowed::HashTableRowBorrowed,
@@ -12,13 +14,16 @@ where
     type Item = HashMap<K, V>;
     type IntoIter = HashTableIntoIter<K, V>;
 
-    /// Iterator taht takes ownership of both keys and values, cloning the keys each time and
-    /// allocating a new hashmap
+    /// Row-wise iterator that takes ownership of both keys and values, cloning the keys each time and
+    /// allocating a new hashmap.
     fn into_iter(self) -> Self::IntoIter {
         HashTableIntoIter { inner: self }
     }
 }
 
+/// Row-wise iterator with ownership over the [`HashTable`]
+///
+/// Returned by [`HashTable::into_iter`]
 #[derive(Debug)]
 pub struct HashTableIntoIter<K, V> {
     inner: HashTable<K, V>,
@@ -43,6 +48,7 @@ where
 }
 
 impl<K, V> HashTable<K, V> {
+    /// Row-wise iterator that borrows the table
     pub fn iter(&self) -> HashTableBorrowedIter<'_, K, V> {
         HashTableBorrowedIter {
             row: 0,
@@ -59,6 +65,7 @@ impl<K, V> HashTable<K, V> {
     }
     */
 
+    /// Column-wise iterator that takes ownership of the keys and values
     pub fn into_iter_columns(self) -> HashTableOwnedIntoIterColumn<K, V> {
         HashTableOwnedIntoIterColumn {
             row_len: self.columns_len(),
@@ -67,6 +74,7 @@ impl<K, V> HashTable<K, V> {
         }
     }
 
+    /// Column-wise iterator that borrows the values from the table
     pub fn iter_columns(&self) -> HashTableBorrowedIterColumn<'_, K, V> {
         HashTableBorrowedIterColumn {
             row_len: self.columns_len(),
@@ -76,6 +84,9 @@ impl<K, V> HashTable<K, V> {
     }
 }
 
+/// Row-wise iterator that borrows the table
+///
+/// Returned by [`HashTable::iter`]
 #[derive(Debug)]
 pub struct HashTableBorrowedIter<'t, K, V> {
     row: usize,
@@ -108,6 +119,9 @@ impl<'t, K, V> Iterator for HashTableMutIter<'t, K, V> {
 }
 */
 
+/// Column-wise iterator with ownership over the keys and values if a table
+///
+/// Returned by [`HashTable::into_iter_columns`]
 #[derive(Debug)]
 pub struct HashTableOwnedIntoIterColumn<K, V> {
     indices_iter: <HashMap<K, usize> as IntoIterator>::IntoIter,
@@ -136,6 +150,9 @@ where
     }
 }
 
+/// Column-wise iterator that borrows teh table
+///
+/// Returned by [`HashTable::iter_columns`]
 #[derive(Debug)]
 pub struct HashTableBorrowedIterColumn<'t, K, V> {
     indices_iter: <&'t HashMap<K, usize> as IntoIterator>::IntoIter,
