@@ -33,6 +33,18 @@ impl<K, V> HashTableColumnOwned<K, V> {
     }
 }
 
+impl<K, V, VV> From<(K, VV)> for HashTableColumnOwned<K, V>
+where
+    VV: Into<Vec<V>>,
+{
+    fn from(value: (K, VV)) -> Self {
+        Self {
+            key: value.0,
+            values: value.1.into(),
+        }
+    }
+}
+
 impl<K, V> Deref for HashTableColumnOwned<K, V> {
     type Target = Vec<V>;
 
