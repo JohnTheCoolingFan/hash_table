@@ -227,7 +227,7 @@ where
         let mut values = values.into_iter();
         let rows = self.rows_len();
         let columns = self.columns_len();
-        let new_column_index = self.indices_table.values().max().unwrap() + 1;
+        let new_column_index = self.indices_table.len();
         self.indices_table.insert(column, new_column_index);
         for i in 0..rows {
             let new_elem_index = i * columns + new_column_index;
