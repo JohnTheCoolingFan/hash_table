@@ -1,6 +1,6 @@
 //! HashTable and its associated types
 
-use std::{borrow::Borrow, hash::Hash};
+use std::{borrow::Borrow, hash::Hash, ops::Deref};
 
 use crate::{
     column::{borrowed::HashTableColumnBorrowed, owned::HashTableColumnOwned},
@@ -341,5 +341,33 @@ where
             indices_table: keys,
             values_vector: values,
         }
+    }
+}
+
+/// Convenience struct that allows using [`FromIterator`] to build from column iterator without
+/// implementation conflicting with row [`FromIterator`]
+#[derive(Debug)]
+struct HashTableFromColumns<K, V>(pub HashTable<K, V>);
+
+impl<K, V> From<HashTableFromColumns<K, V>> for HashTable<K, V> {
+    fn from(value: HashTableFromColumns<K, V>) -> Self {
+        value.0
+    }
+}
+
+impl<K, V> Deref for HashTableFromColumns<K, V> {
+    type Target = HashTable<K, V>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl<K, V> FromIterator<HashTableColumnOwned<K, V>> for HashTableFromColumns<K, V>
+where
+    K: Hash + Eq,
+{
+    fn from_iter<T: IntoIterator<Item = HashTableColumnOwned<K, V>>>(iter: T) -> Self {
+        Self(HashTable::from_column_iter(iter))
     }
 }
