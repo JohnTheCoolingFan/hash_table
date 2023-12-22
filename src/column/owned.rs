@@ -5,7 +5,7 @@ use std::ops::{Deref, DerefMut};
 /// A column of a table.
 ///
 /// Takes ownership over the key of the column and its values
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct HashTableColumnOwned<K, V> {
     pub(crate) key: K,
     pub(crate) values: Vec<V>,
