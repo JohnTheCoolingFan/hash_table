@@ -7,7 +7,8 @@ use crate::typedefs::*;
 /// `HashTable` row that takes ownership over the row's values.
 ///
 /// If you want the keys to be owned too, you can do so by iterating over this row and cloning the
-/// values and then collecting into a hashmap.
+/// values and then collecting into a hashmap, which is done in the implkementation of the [`From`]
+/// trait
 #[derive(Debug)]
 pub struct HashTableRowValueOwned<'t, K, V> {
     pub(crate) parent_indices_table: &'t HashMap<K, usize>,
@@ -68,5 +69,16 @@ impl<'t, K, V> Iterator for HashTableRowValueOwnedIntoIter<'t, K, V> {
                     .expect("Each index is only used once"),
             )
         })
+    }
+}
+
+impl<'t, K, V, OwnedK> From<HashTableRowValueOwned<'t, K, V>> for HashMap<OwnedK, V>
+where
+    K: Hash + Eq,
+    K: ToOwned<Owned = OwnedK>,
+    OwnedK: Hash + Eq,
+{
+    fn from(value: HashTableRowValueOwned<'t, K, V>) -> Self {
+        value.into_iter().map(|(k, v)| (k.to_owned(), v)).collect()
     }
 }
