@@ -279,6 +279,31 @@ where
         }
         Some(HashTableColumnOwned { key, values: buf })
     }
+
+    /// Construct HashTable from iterator of columns
+    pub fn from_column_iter<I>(iter: I) -> Self
+    where
+        I: IntoIterator<Item = HashTableColumnOwned<K, V>>,
+    {
+        let mut indices = HashMap::new();
+        let mut result_values = Vec::new();
+        let mut expected_length = None;
+        for (i, col) in iter.into_iter().enumerate() {
+            let (key, col_values) = col.into_pair();
+            let expected_length = expected_length.get_or_insert(col_values.len());
+            if col_values.len() != *expected_length {
+                panic!("Column {i} doesn't have the same amopunt of elements as the first column");
+            }
+            indices.insert(key, i);
+            for (row, val) in col_values.into_iter().enumerate() {
+                result_values.insert((row + 1) * (i + 1), val);
+            }
+        }
+        Self {
+            indices_table: indices,
+            values_vector: result_values,
+        }
+    }
 }
 
 impl<K, V, R> FromIterator<R> for HashTable<K, V>
