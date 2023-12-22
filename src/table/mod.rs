@@ -254,7 +254,7 @@ where
         );
     }
 
-    /// Remove a column from teh table and take ownership of the key and values.
+    /// Remove a column from the table and take ownership of the key and values.
     ///
     /// Will return None if the `column` does not exist in the table.
     pub fn remove_column<Q>(&mut self, column: &Q) -> Option<HashTableColumnOwned<K, V>>
