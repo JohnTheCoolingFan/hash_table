@@ -366,6 +366,7 @@ impl<K, V> FromIterator<HashTableColumnOwned<K, V>> for HashTableFromColumns<K, 
 where
     K: Hash + Eq,
 {
+    #[inline]
     fn from_iter<T: IntoIterator<Item = HashTableColumnOwned<K, V>>>(iter: T) -> Self {
         Self(HashTable::from_column_iter(iter))
     }
