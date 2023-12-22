@@ -1,6 +1,6 @@
 //! HashTable and its associated types
 
-use std::{borrow::Borrow, hash::Hash, ops::Deref};
+use std::{borrow::Borrow, collections::BTreeMap, hash::Hash, ops::Deref};
 
 use crate::{
     column::{borrowed::HashTableColumnBorrowed, owned::HashTableColumnOwned},
@@ -125,6 +125,29 @@ where
     /// Make an indices table from an iterator.
     fn indices_table_from_iterator(columns: impl IntoIterator<Item = K>) -> HashMap<K, usize> {
         columns.into_iter().zip(0_usize..).collect()
+    }
+
+    /// Remove row from the hashtable, taking ownership of teh values. Returns a [`HashMap`]
+    ///
+    /// The difference from [`Self::remove_row`] is that this only allocates a hashmap that
+    /// references teh keys instead of allocating valeus and taking a reference to a hashmap of
+    /// indices used internally.
+    pub fn remove_row_hashmap(&mut self, row: usize) -> Option<HashMap<&K, V>> {
+        if row >= self.rows_len() {
+            return None;
+        }
+
+        let start = row * self.columns_len();
+        let end = start + self.columns_len();
+
+        let inverse_indices_table: BTreeMap<usize, &K> =
+            self.indices_table.iter().map(|(k, i)| (*i, k)).collect();
+        Some(
+            inverse_indices_table
+                .into_values()
+                .zip(self.values_vector.drain(start..end))
+                .collect(),
+        )
     }
 
     /// Index of a column.
