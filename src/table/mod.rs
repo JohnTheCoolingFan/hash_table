@@ -346,7 +346,7 @@ where
 /// Convenience struct that allows using [`FromIterator`] to build from column iterator without
 /// implementation conflicting with row [`FromIterator`]
 #[derive(Debug)]
-struct HashTableFromColumns<K, V>(pub HashTable<K, V>);
+pub struct HashTableFromColumns<K, V>(pub HashTable<K, V>);
 
 impl<K, V> From<HashTableFromColumns<K, V>> for HashTable<K, V> {
     fn from(value: HashTableFromColumns<K, V>) -> Self {
