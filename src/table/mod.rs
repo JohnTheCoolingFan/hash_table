@@ -226,11 +226,10 @@ where
     {
         let mut values = values.into_iter();
         let rows = self.rows_len();
-        let columns = self.columns_len();
-        let new_column_index = self.indices_table.len();
+        let new_column_index = self.columns_len();
         self.indices_table.insert(column, new_column_index);
         for i in 0..rows {
-            let new_elem_index = i * columns + new_column_index;
+            let new_elem_index = (i + 1) * new_column_index;
             self.values_vector
                 .insert(new_elem_index, values.next().unwrap())
         }
