@@ -8,10 +8,19 @@ use crate::typedefs::*;
 ///
 /// If you want the keys to be owned too, you can do so by iterating over this row and cloning the
 /// values and then collecting into a hashmap.
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct HashTableRowValueOwned<'t, K, V> {
     pub(crate) parent_indices_table: &'t HashMap<K, usize>,
     pub(crate) values: Vec<V>,
+}
+
+impl<'t, K, V: Clone> Clone for HashTableRowValueOwned<'t, K, V> {
+    fn clone(&self) -> Self {
+        Self {
+            parent_indices_table: self.parent_indices_table,
+            values: self.values.clone(),
+        }
+    }
 }
 
 impl<'t, K, V> HashTableRowValueOwned<'t, K, V> {
