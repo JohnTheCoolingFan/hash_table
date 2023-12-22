@@ -236,7 +236,7 @@ where
         }
     }
 
-    /// Add a column using a generator function taht returns a value based on the values of the
+    /// Add a column using a generator function that returns a value based on the values of the
     /// row.
     pub fn add_column_with<F>(&mut self, column: K, mut values: F)
     where
