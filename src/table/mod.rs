@@ -280,3 +280,41 @@ where
         Some(HashTableColumnOwned { key, values: buf })
     }
 }
+
+impl<K, V, R> FromIterator<R> for HashTable<K, V>
+where
+    K: Hash + Eq,
+    R: IntoIterator<Item = (K, V)>,
+{
+    fn from_iter<T: IntoIterator<Item = R>>(iter: T) -> Self {
+        let mut keys = HashMap::new();
+        let mut values = Vec::new();
+        let mut iter = iter.into_iter();
+        if let Some(first_row) = iter.next() {
+            for (i, (k, v)) in first_row.into_iter().enumerate() {
+                keys.insert(k, i);
+                values.push(v);
+            }
+            let mut row_buf: Vec<(usize, V)> = Vec::with_capacity(keys.len());
+            for row in iter {
+                for (k, v) in row {
+                    let Some(idx) = keys.get(&k) else {
+                        panic!("Row contains key that is not present in the first row")
+                    };
+
+                    row_buf.push((*idx, v));
+                }
+                row_buf.sort_by_key(|(i, _)| *i);
+                row_buf.dedup_by_key(|(i, _)| *i);
+                if row_buf.len() != keys.len() {
+                    panic!("Row length and columns amount mismatch");
+                }
+                values.extend(row_buf.drain(..).map(|(_, v)| v))
+            }
+        }
+        Self {
+            indices_table: keys,
+            values_vector: values,
+        }
+    }
+}
