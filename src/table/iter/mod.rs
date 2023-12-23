@@ -1,5 +1,7 @@
 //! Implementation of various ways to iterate over a hashtable
 
+use std::iter::FusedIterator;
+
 use crate::{
     column::{borrowed::HashTableColumnBorrowed, owned::HashTableColumnOwned},
     row::borrowed::HashTableRowBorrowed,
@@ -193,5 +195,13 @@ impl<'t, K, V> Iterator for HashTableBorrowedIterColumn<'t, K, V> {
 
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.indices_iter.size_hint()
+    }
+}
+
+impl<'t, K, V> FusedIterator for HashTableBorrowedIterColumn<'t, K, V> {}
+
+impl<'t, K, V> ExactSizeIterator for HashTableBorrowedIterColumn<'t, K, V> {
+    fn len(&self) -> usize {
+        self.indices_iter.len()
     }
 }
