@@ -128,6 +128,23 @@ impl<'t, K, V> Iterator for HashTableBorrowedIter<'t, K, V> {
     }
 }
 
+impl<'t, K, V> Clone for HashTableBorrowedIter<'t, K, V> {
+    fn clone(&self) -> Self {
+        *self
+    }
+}
+
+impl<'t, K, V> Copy for HashTableBorrowedIter<'t, K, V> {}
+
+impl<'t, K, V> FusedIterator for HashTableBorrowedIter<'t, K, V> {}
+
+impl<'t, K, V> ExactSizeIterator for HashTableBorrowedIter<'t, K, V> {
+    #[inline]
+    fn len(&self) -> usize {
+        self.table.rows_len() - self.row
+    }
+}
+
 /*
 #[derive(Debug)]
 pub struct HashTableMutIter<'t, K, V> {
