@@ -56,6 +56,7 @@ where
 
 impl<K, V> HashTable<K, V> {
     /// Row-wise iterator that borrows the table
+    #[inline]
     pub fn iter(&self) -> HashTableBorrowedIter<'_, K, V> {
         HashTableBorrowedIter {
             row: 0,
@@ -82,12 +83,23 @@ impl<K, V> HashTable<K, V> {
     }
 
     /// Column-wise iterator that borrows the values from the table
+    #[inline]
     pub fn iter_columns(&self) -> HashTableBorrowedIterColumn<'_, K, V> {
         HashTableBorrowedIterColumn {
             row_len: self.columns_len(),
             indices_iter: self.indices_table.iter(),
             values: &self.values_vector,
         }
+    }
+}
+
+impl<'t, K, V> IntoIterator for &'t HashTable<K, V> {
+    type Item = HashTableRowBorrowed<'t, K, V>;
+    type IntoIter = HashTableBorrowedIter<'t, K, V>;
+
+    #[inline]
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
     }
 }
 
