@@ -45,6 +45,11 @@ where
                 .map(|row| row.into_iter().map(|(k, v)| (k.clone(), v)).collect())
         }
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let len = self.inner.rows_len();
+        (len, Some(len))
+    }
 }
 
 impl<K, V> HashTable<K, V> {
@@ -101,6 +106,12 @@ impl<'t, K, V> Iterator for HashTableBorrowedIter<'t, K, V> {
         self.row += 1;
         Some(val)
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let len = self.table.rows_len();
+        let remainder = len - self.row;
+        (remainder, Some(remainder))
+    }
 }
 
 /*
@@ -148,6 +159,10 @@ where
             .collect();
         Some(HashTableColumnOwned { key, values })
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.indices_iter.size_hint()
+    }
 }
 
 /// Column-wise iterator that borrows teh table
@@ -174,5 +189,9 @@ impl<'t, K, V> Iterator for HashTableBorrowedIterColumn<'t, K, V> {
             column: key,
             values,
         })
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.indices_iter.size_hint()
     }
 }
