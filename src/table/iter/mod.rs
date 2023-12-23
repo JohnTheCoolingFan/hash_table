@@ -132,7 +132,7 @@ impl<'t, K, V> Iterator for HashTableMutIter<'t, K, V> {
 }
 */
 
-/// Column-wise iterator with ownership over the keys and values if a table
+/// Column-wise iterator with ownership over the keys and values of a table
 ///
 /// Returned by [`HashTable::into_iter_columns`]
 #[derive(Debug)]
