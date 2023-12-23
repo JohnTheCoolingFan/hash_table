@@ -142,10 +142,7 @@ pub struct HashTableOwnedIntoIterColumn<K, V> {
     row_len: usize,
 }
 
-impl<K, V> Iterator for HashTableOwnedIntoIterColumn<K, V>
-where
-    K: Hash + Eq,
-{
+impl<K, V> Iterator for HashTableOwnedIntoIterColumn<K, V> {
     type Item = HashTableColumnOwned<K, V>;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -164,6 +161,14 @@ where
 
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.indices_iter.size_hint()
+    }
+}
+
+impl<K, V> FusedIterator for HashTableOwnedIntoIterColumn<K, V> {}
+
+impl<K, V> ExactSizeIterator for HashTableOwnedIntoIterColumn<K, V> {
+    fn len(&self) -> usize {
+        self.indices_iter.len()
     }
 }
 
