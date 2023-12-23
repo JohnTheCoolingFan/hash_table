@@ -167,7 +167,7 @@ where
     }
 }
 
-/// Column-wise iterator that borrows teh table
+/// Column-wise iterator that borrows the table
 ///
 /// Returned by [`HashTable::iter_columns`]
 #[derive(Debug)]
