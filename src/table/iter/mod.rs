@@ -182,6 +182,16 @@ pub struct HashTableBorrowedIterColumn<'t, K, V> {
     row_len: usize,
 }
 
+impl<'t, K, V> Clone for HashTableBorrowedIterColumn<'t, K, V> {
+    fn clone(&self) -> Self {
+        Self {
+            indices_iter: self.indices_iter.clone(),
+            values: self.values,
+            row_len: self.row_len,
+        }
+    }
+}
+
 impl<'t, K, V> Iterator for HashTableBorrowedIterColumn<'t, K, V> {
     type Item = HashTableColumnBorrowed<'t, 't, K, V>;
 
