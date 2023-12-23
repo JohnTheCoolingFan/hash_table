@@ -36,27 +36,10 @@ impl<'t, Q, V> Deref for HashTableColumnBorrowed<'t, '_, Q, V> {
 
 impl<'t, Q, V> IntoIterator for HashTableColumnBorrowed<'t, '_, Q, V> {
     type Item = &'t V;
-    type IntoIter = BorrowedColumnIter<'t, V>;
+    type IntoIter = <Vec<&'t V> as IntoIterator>::IntoIter;
 
+    /// An iterator over borrowed values of a table column.
     fn into_iter(self) -> Self::IntoIter {
-        BorrowedColumnIter {
-            inner: self.values.into_iter(),
-        }
-    }
-}
-
-/// An iterator over borrowed values of a table column.
-///
-/// Returned by [`HashTableColumnBorrowed::into_iter`]
-#[derive(Debug)]
-pub struct BorrowedColumnIter<'t, V> {
-    inner: <Vec<&'t V> as IntoIterator>::IntoIter,
-}
-
-impl<'t, V> Iterator for BorrowedColumnIter<'t, V> {
-    type Item = &'t V;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        self.inner.next()
+        self.values.into_iter()
     }
 }
