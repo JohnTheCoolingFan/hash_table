@@ -1,6 +1,6 @@
 //! Value-owned row access
 
-use std::borrow::Borrow;
+use std::{borrow::Borrow, iter::FusedIterator};
 
 use crate::typedefs::*;
 
@@ -36,10 +36,7 @@ impl<'t, K, V> HashTableRowValueOwned<'t, K, V> {
     }
 }
 
-impl<'t, K, V> IntoIterator for HashTableRowValueOwned<'t, K, V>
-where
-    K: Hash + Eq,
-{
+impl<'t, K, V> IntoIterator for HashTableRowValueOwned<'t, K, V> {
     type Item = (&'t K, V);
     type IntoIter = HashTableRowValueOwnedIntoIter<'t, K, V>;
 
@@ -57,6 +54,15 @@ pub struct HashTableRowValueOwnedIntoIter<'t, K, V> {
     indices_table_iter: <&'t HashMap<K, usize> as IntoIterator>::IntoIter,
 }
 
+impl<'t, K, V: Clone> Clone for HashTableRowValueOwnedIntoIter<'t, K, V> {
+    fn clone(&self) -> Self {
+        Self {
+            values: self.values.clone(),
+            indices_table_iter: self.indices_table_iter.clone(),
+        }
+    }
+}
+
 impl<'t, K, V> Iterator for HashTableRowValueOwnedIntoIter<'t, K, V> {
     type Item = (&'t K, V);
 
@@ -70,15 +76,26 @@ impl<'t, K, V> Iterator for HashTableRowValueOwnedIntoIter<'t, K, V> {
             )
         })
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.indices_table_iter.size_hint()
+    }
+}
+
+impl<'t, K, V> FusedIterator for HashTableRowValueOwnedIntoIter<'t, K, V> {}
+
+impl<'t, K, V> ExactSizeIterator for HashTableRowValueOwnedIntoIter<'t, K, V> {
+    fn len(&self) -> usize {
+        self.indices_table_iter.len()
+    }
 }
 
 impl<'t, K, V, OwnedK> From<HashTableRowValueOwned<'t, K, V>> for HashMap<OwnedK, V>
 where
-    K: Hash + Eq,
     K: ToOwned<Owned = OwnedK>,
     OwnedK: Hash + Eq,
 {
-    fn from(value: HashTableRowValueOwned<'t, K, V>) -> Self {
-        value.into_iter().map(|(k, v)| (k.to_owned(), v)).collect()
+    fn from(row: HashTableRowValueOwned<'t, K, V>) -> Self {
+        row.into_iter().map(|(k, v)| (k.to_owned(), v)).collect()
     }
 }

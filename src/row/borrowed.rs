@@ -1,6 +1,6 @@
 //! Borrowed row access
 
-use std::borrow::Borrow;
+use std::{borrow::Borrow, iter::FusedIterator};
 
 use crate::*;
 
@@ -67,15 +67,33 @@ pub struct BorrowedRowIter<'t, K, V> {
     values: &'t [V],
 }
 
-impl<'t, K, V> Iterator for BorrowedRowIter<'t, K, V>
-where
-    K: Hash + Eq,
-{
+impl<'t, K, V> Clone for BorrowedRowIter<'t, K, V> {
+    fn clone(&self) -> Self {
+        Self {
+            columns_iter: self.columns_iter.clone(),
+            values: self.values,
+        }
+    }
+}
+
+impl<'t, K, V> FusedIterator for BorrowedRowIter<'t, K, V> {}
+
+impl<'t, K, V> ExactSizeIterator for BorrowedRowIter<'t, K, V> {
+    fn len(&self) -> usize {
+        self.columns_iter.len()
+    }
+}
+
+impl<'t, K, V> Iterator for BorrowedRowIter<'t, K, V> {
     type Item = (&'t K, &'t V);
 
     fn next(&mut self) -> Option<Self::Item> {
         let (key, idx) = self.columns_iter.next()?;
         let val = &self.values[*idx];
         Some((key, val))
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.columns_iter.size_hint()
     }
 }

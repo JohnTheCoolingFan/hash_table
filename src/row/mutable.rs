@@ -1,6 +1,6 @@
 //! Mutable borrow column access
 
-use std::borrow::Borrow;
+use std::{borrow::Borrow, iter::FusedIterator};
 
 use crate::*;
 
@@ -44,6 +44,14 @@ pub struct HashTableMutableBorrowedRowIntoIter<'t, K, V> {
     values: Vec<Option<&'t mut V>>,
 }
 
+impl<'t, K, V> FusedIterator for HashTableMutableBorrowedRowIntoIter<'t, K, V> {}
+
+impl<'t, K, V> ExactSizeIterator for HashTableMutableBorrowedRowIntoIter<'t, K, V> {
+    fn len(&self) -> usize {
+        self.indices_table_iter.len()
+    }
+}
+
 impl<'t, K, V> Iterator for HashTableMutableBorrowedRowIntoIter<'t, K, V> {
     type Item = (&'t K, &'t mut V);
 
@@ -51,5 +59,9 @@ impl<'t, K, V> Iterator for HashTableMutableBorrowedRowIntoIter<'t, K, V> {
         self.indices_table_iter
             .next()
             .map(|(k, i)| (k, self.values[*i].take().expect("Indexes do not repeat")))
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.indices_table_iter.size_hint()
     }
 }
