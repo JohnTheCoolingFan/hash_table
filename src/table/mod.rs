@@ -303,14 +303,15 @@ where
     }
 
     /// Construct HashTable from iterator of columns
-    pub fn from_column_iter<I>(iter: I) -> Self
+    pub fn from_column_iter<I, C>(iter: I) -> Self
     where
-        I: IntoIterator<Item = HashTableColumnOwned<K, V>>,
+        I: IntoIterator<Item = C>,
+        C: Into<HashTableColumnOwned<K, V>>,
     {
         let mut indices = HashMap::new();
         let mut result_values = Vec::new();
         let mut expected_length = None;
-        for (i, col) in iter.into_iter().enumerate() {
+        for (i, col) in iter.into_iter().map(Into::into).enumerate() {
             let (key, col_values) = col.into_pair();
             let expected_length = expected_length.get_or_insert(col_values.len());
             if col_values.len() != *expected_length {
@@ -385,12 +386,13 @@ impl<K, V> Deref for HashTableFromColumns<K, V> {
     }
 }
 
-impl<K, V> FromIterator<HashTableColumnOwned<K, V>> for HashTableFromColumns<K, V>
+impl<K, V, C> FromIterator<C> for HashTableFromColumns<K, V>
 where
     K: Hash + Eq,
+    C: Into<HashTableColumnOwned<K, V>>,
 {
     #[inline]
-    fn from_iter<T: IntoIterator<Item = HashTableColumnOwned<K, V>>>(iter: T) -> Self {
+    fn from_iter<T: IntoIterator<Item = C>>(iter: T) -> Self {
         Self(HashTable::from_column_iter(iter))
     }
 }
