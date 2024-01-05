@@ -49,7 +49,7 @@ where
         };
 
         while let Some(row) = seq.next_element::<HashMap<K, V>>()? {
-            res.add_row(row);
+            res.push_row(row);
         }
 
         Ok(res)
@@ -101,7 +101,7 @@ where
         };
 
         while let Some((key, values)) = map.next_entry::<K, Vec<V>>()? {
-            res.add_column(key, values);
+            res.insert_column(key, values);
         }
 
         Ok(res)

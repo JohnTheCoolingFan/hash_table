@@ -135,7 +135,7 @@ impl<K, V> HashTable<K, V> {
     }
 
     /// Get the column keys of this table
-    pub fn keys(&self) -> Keys<'_, K, usize> {
+    pub fn column_keys(&self) -> Keys<'_, K, usize> {
         self.indices_table.keys()
     }
 }
@@ -263,7 +263,7 @@ where
     }
 
     /// Add a row to the table from an iterator of key-value pairs.
-    pub fn add_row<I>(&mut self, row: I)
+    pub fn push_row<I>(&mut self, row: I)
     where
         I: IntoIterator<Item = (K, V)>,
     {
@@ -274,7 +274,7 @@ where
 
     /// Add a row to the table using a generator function that returns the value from the column
     /// key.
-    pub fn add_row_with<F>(&mut self, mut row_generator: F)
+    pub fn push_row_with<F>(&mut self, mut row_generator: F)
     where
         F: FnMut(&K) -> V,
     {
@@ -287,7 +287,7 @@ where
     /// Add a column with values provided through an iterator.
     ///
     /// The iterator must have the same amount of elements as there are currently rows in teh table
-    pub fn add_column<I>(&mut self, column: K, values: I)
+    pub fn insert_column<I>(&mut self, column: K, values: I)
     where
         I: IntoIterator<Item = V>,
     {
@@ -308,12 +308,12 @@ where
 
     /// Add a column using a generator function that returns a value based on the values of the
     /// row.
-    pub fn add_column_with<F>(&mut self, column: K, mut values: F)
+    pub fn insert_column_with<F>(&mut self, column: K, mut values: F)
     where
         F: FnMut(HashTableRowBorrowed<'_, K, V>) -> V,
     {
         let rows = self.rows_len();
-        self.add_column(
+        self.insert_column(
             column,
             (0..rows)
                 .map(|i| {
