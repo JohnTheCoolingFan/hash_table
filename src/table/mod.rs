@@ -41,10 +41,19 @@ pub mod iter;
 ///     );
 /// }
 /// ```
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Clone)]
 pub struct HashTable<K, V> {
     pub(crate) indices_table: HashMap<K, usize>,
     pub(crate) values_vector: Vec<V>,
+}
+
+impl<K, V> Default for HashTable<K, V> {
+    fn default() -> Self {
+        HashTable {
+            indices_table: Default::default(),
+            values_vector: Default::default(),
+        }
+    }
 }
 
 impl<K, V> HashTable<K, V> {
