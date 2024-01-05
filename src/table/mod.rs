@@ -172,7 +172,7 @@ where
     /// Remove row from the hashtable, taking ownership of teh values. Returns a [`HashMap`]
     ///
     /// The difference from [`Self::remove_row`] is that this only allocates a hashmap that
-    /// references teh keys instead of allocating valeus and taking a reference to a hashmap of
+    /// references the keys instead of allocating values and taking a reference to a hashmap of
     /// indices used internally.
     pub fn remove_row_hashmap(&mut self, row: usize) -> Option<HashMap<&K, V>> {
         if row >= self.rows_len() {
@@ -215,7 +215,7 @@ where
 
     /// Get an element from the table.
     ///
-    /// Will return None of the `column` does not exist in teh table or `row` is out of range.
+    /// Will return None if the `column` does not exist in the table or `row` is out of range.
     #[inline]
     pub fn get<Q>(&self, column: &Q, row: usize) -> Option<&V>
     where
@@ -227,7 +227,7 @@ where
 
     /// Get an element from the table with mutable access.
     ///
-    /// Will return None of the `column` does not exist in the table or `row` is out of range.
+    /// Will return None if the `column` does not exist in the table or `row` is out of range.
     #[inline]
     pub fn get_mut<Q>(&mut self, column: &Q, row: usize) -> Option<&mut V>
     where
@@ -238,7 +238,7 @@ where
         self.values_vector.get_mut(idx)
     }
 
-    /// Get an immutable access to a table column.
+    /// Get a table column.
     ///
     /// Will return None if the `column` does not exist in the table.
     #[inline]
@@ -285,6 +285,8 @@ where
     }
 
     /// Add a column with values provided through an iterator.
+    ///
+    /// The iterator must have the same amount of elements as there are currently rows in teh table
     pub fn add_column<I>(&mut self, column: K, values: I)
     where
         I: IntoIterator<Item = V>,
@@ -295,8 +297,12 @@ where
         self.indices_table.insert(column, new_column_index);
         for i in 0..rows {
             let new_elem_index = (i + 1) * new_column_index;
-            self.values_vector
-                .insert(new_elem_index, values.next().unwrap())
+            self.values_vector.insert(
+                new_elem_index,
+                values
+                    .next()
+                    .unwrap_or_else(|| panic!("The iterator must have at least {rows} rows")),
+            )
         }
     }
 
@@ -344,7 +350,7 @@ where
         Some(HashTableColumnOwned { key, values: buf })
     }
 
-    /// Construct HashTable from iterator of columns
+    /// Construct HashTable from an iterator of columns
     pub fn from_column_iter<I, C>(iter: I) -> Self
     where
         I: IntoIterator<Item = C>,
