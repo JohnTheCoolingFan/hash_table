@@ -31,7 +31,9 @@ where
     {
         self.indices_table.get(column).map(|i| &self.row_values[*i])
     }
+}
 
+impl<'t, K, V> HashTableRowBorrowed<'t, K, V> {
     /// Return an iterator over the keys of the columns of the table
     pub fn columns_keys(&self) -> Keys<'t, K, usize> {
         self.indices_table.keys()
@@ -43,10 +45,7 @@ where
     }
 }
 
-impl<'t, K, V> IntoIterator for HashTableRowBorrowed<'t, K, V>
-where
-    K: Hash + Eq,
-{
+impl<'t, K, V> IntoIterator for HashTableRowBorrowed<'t, K, V> {
     type Item = (&'t K, &'t V);
     type IntoIter = BorrowedRowIter<'t, K, V>;
 
