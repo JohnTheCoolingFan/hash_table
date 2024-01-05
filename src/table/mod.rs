@@ -370,18 +370,31 @@ where
         }
     }
 
+    /// Construct a [`HashTable`] from an iterator of column keys and an iterator of rows of values
+    ///
+    /// The only check of row lengths performed is whether there is a remainder from division of
+    /// the total amount of values (sum of row lengths) by the amount of columns. If there is a
+    /// nonzero remainder, these values get dropped.
+    ///
+    /// This means that with 2 columns teh row iterator can have two rows with lengths 1 and 3 and
+    /// the first element of the second row will be moved to teh end of the first row.
     pub fn from_column_keys_and_rows<CKI, RI, R>(columns: CKI, rows: RI) -> Self
     where
         CKI: IntoIterator<Item = K>,
         RI: IntoIterator<Item = R>,
         R: IntoIterator<Item = V>,
     {
-        let indices_table = columns
+        let indices_table: HashMap<K, usize> = columns
             .into_iter()
             .enumerate()
             .map(|(i, k)| (k, i))
             .collect();
-        let values_vector = rows.into_iter().flatten().collect();
+        let mut values_vector: Vec<V> = rows.into_iter().flatten().collect();
+
+        let remainder = values_vector.len() % indices_table.len();
+
+        // Drop the iterator immediately as we only need to remove values at the end
+        let _ = values_vector.drain((values_vector.len() - remainder)..);
 
         Self {
             indices_table,
