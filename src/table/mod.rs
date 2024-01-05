@@ -13,6 +13,8 @@ use crate::{
 };
 
 pub mod iter;
+#[cfg(feature = "serde")]
+pub mod serde_impls;
 
 /// This data structure represents a 2-dimensional grid of values. Each element is indexed by a
 /// hashable key and a row index. It's also possible to access a whole row or column of the table.
