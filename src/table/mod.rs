@@ -8,6 +8,7 @@ use crate::{
         borrowed::HashTableRowBorrowed, mutable::HashTableMutableBorrowedRow,
         value_owned::HashTableRowValueOwned,
     },
+    typedefs::Keys,
     HashMap,
 };
 
@@ -15,6 +16,31 @@ pub mod iter;
 
 /// This data structure represents a 2-dimensional grid of values. Each element is indexed by a
 /// hashable key and a row index. It's also possible to access a whole row or column of the table.
+///
+/// ## Example
+/// ```
+/// # use hash_table_datastruct::HashTable;
+///
+/// let timestamps = HashTable::from_column_keys_and_rows(
+///     ["hour", "minute", "second"],
+///     [
+///         [7, 15, 13],
+///         [8, 30, 32],
+///         [9, 45, 16]
+///     ]
+/// );
+///
+/// for row in timestamps {
+///     let hour = *row.get("hour").unwrap();
+///     let minute = *row.get("minute").unwrap();
+///     let second = *row.get("second").unwrap();
+///     assert!(
+///         (hour == 7 && minute == 15 && second == 13) ||
+///         (hour == 8 && minute == 30 && second == 32) ||
+///         (hour == 9 && minute == 45 && second == 16)
+///     );
+/// }
+/// ```
 #[derive(Debug, Default, Clone)]
 pub struct HashTable<K, V> {
     pub(crate) indices_table: HashMap<K, usize>,
@@ -95,6 +121,11 @@ impl<K, V> HashTable<K, V> {
             parent_indices_table: &self.indices_table,
             values: values.collect(),
         })
+    }
+
+    /// Get the column keys of this table
+    pub fn keys(&self) -> Keys<'_, K, usize> {
+        self.indices_table.keys()
     }
 }
 
@@ -325,6 +356,25 @@ where
         Self {
             indices_table: indices,
             values_vector: result_values,
+        }
+    }
+
+    pub fn from_column_keys_and_rows<CKI, RI, R>(columns: CKI, rows: RI) -> Self
+    where
+        CKI: IntoIterator<Item = K>,
+        RI: IntoIterator<Item = R>,
+        R: IntoIterator<Item = V>,
+    {
+        let indices_table = columns
+            .into_iter()
+            .enumerate()
+            .map(|(i, k)| (k, i))
+            .collect();
+        let values_vector = rows.into_iter().flatten().collect();
+
+        Self {
+            indices_table,
+            values_vector,
         }
     }
 }

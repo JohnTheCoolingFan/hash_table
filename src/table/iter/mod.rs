@@ -43,7 +43,7 @@ where
             None
         } else {
             self.inner
-                .remove_row(self.inner.rows_len() - 1)
+                .remove_row_hashmap(0)
                 .map(|row| row.into_iter().map(|(k, v)| (k.clone(), v)).collect())
         }
     }
