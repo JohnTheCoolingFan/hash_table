@@ -1,6 +1,6 @@
 [package]
 name = "hash_table_datastruct"
-version = "0.6.1"
+version = "0.6.2"
 edition = "2021"
 
 description = "Adds a HashTable type, allowing to store values in a table with integer-indexed rows and hashable keys for columns"
