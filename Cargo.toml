@@ -13,7 +13,7 @@ categories = ["data-structures", "rust-patterns"]
 
 [features]
 default = ["serde"]
-serde = ["dep:serde", "hashbrown/serde"]
+hashbrown-serde = ["serde", "hashbrown/serde"]
 
 [dependencies]
 cfg-if = "1.0.0"
