@@ -1,3 +1,5 @@
+//! Re-exports of `std` or `hashbrown` types for easier usage throughout the library
+
 use cfg_if::cfg_if;
 
 cfg_if! {
