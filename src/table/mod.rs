@@ -286,7 +286,7 @@ where
 
     /// Add a column with values provided through an iterator.
     ///
-    /// The iterator must have the same amount of elements as there are currently rows in teh table
+    /// The iterator must have the same amount of elements as there are currently rows in the table
     pub fn insert_column<I>(&mut self, column: K, values: I)
     where
         I: IntoIterator<Item = V>,
