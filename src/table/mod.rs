@@ -286,7 +286,11 @@ where
 
     /// Add a column with values provided through an iterator.
     ///
-    /// The iterator must have the same amount of elements as there are currently rows in the table
+    /// The iterator must have the same amount of elements as there are currently rows in the
+    /// table.
+    ///
+    /// This function has O(n^2) complexity, where n is the number of rows. It is recommended to
+    /// insert the needed columns beforehand.
     pub fn insert_column<I>(&mut self, column: K, values: I)
     where
         I: IntoIterator<Item = V>,
@@ -308,6 +312,9 @@ where
 
     /// Add a column using a generator function that returns a value based on the values of the
     /// row.
+    ///
+    /// This function has O(n^2) complexity, where n is the number of rows. It is recommended to
+    /// insert the needed columns beforehand.
     pub fn insert_column_with<F>(&mut self, column: K, mut values: F)
     where
         F: FnMut(HashTableRowBorrowed<'_, K, V>) -> V,
