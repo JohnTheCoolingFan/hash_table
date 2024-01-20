@@ -1,6 +1,11 @@
 //! HashTable and its associated types
 
-use std::{borrow::Borrow, collections::BTreeMap, hash::Hash, ops::Deref};
+use std::{
+    borrow::Borrow,
+    collections::BTreeMap,
+    hash::Hash,
+    ops::{Deref, Index, IndexMut},
+};
 
 use crate::{
     column::{borrowed::HashTableColumnBorrowed, owned::HashTableColumnOwned},
@@ -413,6 +418,30 @@ where
             indices_table,
             values_vector,
         }
+    }
+}
+
+impl<K, V, Q> Index<(&Q, usize)> for HashTable<K, V>
+where
+    K: Hash + Eq,
+    K: Borrow<Q>,
+    Q: Hash + Eq,
+{
+    type Output = V;
+
+    fn index(&self, index: (&Q, usize)) -> &Self::Output {
+        self.get(index.0, index.1).unwrap()
+    }
+}
+
+impl<K, V, Q> IndexMut<(&Q, usize)> for HashTable<K, V>
+where
+    K: Hash + Eq,
+    K: Borrow<Q>,
+    Q: Hash + Eq,
+{
+    fn index_mut(&mut self, index: (&Q, usize)) -> &mut Self::Output {
+        self.get_mut(index.0, index.1).unwrap()
     }
 }
 
